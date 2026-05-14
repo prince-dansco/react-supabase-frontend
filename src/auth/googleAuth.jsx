@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useStores } from "../store/userStore";
 import { Toaster, toast } from "react-hot-toast";
 
+const API_URL = import.meta.env.VITE_API_URL || "https://react-supabase-backends.onrender.com/api/auth";
+
 const GoogleSuccess = () => {
   const navigate = useNavigate();
-  const { setGoogleAuth } = useStores();
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -13,28 +14,23 @@ const GoogleSuccess = () => {
     const token = params.get("token");
 
     if (token) {
-      // Store the token
       localStorage.setItem("token", token);
-      
-      // Fetch user data with the token
+
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/me', {
+          const response = await fetch(`${API_URL}/me`, {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
             const user = userData.user || userData;
-            
-            // Store user in localStorage
+
             localStorage.setItem("user", JSON.stringify(user));
-            
-            // Update Zustand store
             useStores.getState().setGoogleAuth(token, user);
-            
+
             toast.success("Google login successful!");
             navigate("/dashBoard");
           } else {
@@ -47,7 +43,7 @@ const GoogleSuccess = () => {
           setTimeout(() => navigate("/signIn"), 3000);
         }
       };
-      
+
       fetchUser();
     } else {
       setError("No authentication token received");
